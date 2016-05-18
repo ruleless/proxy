@@ -6,6 +6,8 @@
 
 using namespace proxy;
 
+int gProxyInstance = 0;
+
 //--------------------------------------------------------------------------
 // 接入管理
 class AcceptorMgr
@@ -59,7 +61,7 @@ class AcceptorMgr
 	void accept(SockID newSock, SockID listenSock)
 	{
 		AcceptorList::iterator it = mAcceptors.begin();
-		for (; it != mAcceptors.begin(); ++it)
+		for (; it != mAcceptors.end(); ++it)
 		{
 			Acceptor *pAcceptor = *it;
 			EProxyCode retCode = pAcceptor->tryAccept(newSock, listenSock);
@@ -110,49 +112,51 @@ int main(int argc, char *argv[])
 
 		recvBuf = defRecvBuf;
 		bufLen = DEF_RECV_BUFSZ;
-
-  process_beg:
 		hr = asn_core_read(asncore, &evt, &wparam, &lparam, recvBuf, bufLen);
-
-		if (-1 == hr)
+		while (hr != -1)
 		{
-			if (recvBuf != defRecvBuf) free(recvBuf);
-			continue;
-		}
-
-		if (-2 == hr)
-		{
-			if (recvBuf != defRecvBuf) free(recvBuf);
-			bufLen = asn_core_read(asncore, &evt, &wparam, &lparam, NULL, 0);
-			recvBuf = malloc(bufLen);
-			goto process_beg;
-		}
-		assert(hr >= 0 && "hr >= 0");
-
-		switch (hr)
-		{
-		case ASYNCCORE_EVT_NEW:
+			if (-2 == hr) // short of buf
 			{
-				if (lparam > 0)
+				if (recvBuf != defRecvBuf) free(recvBuf);
+				bufLen = asn_core_read(asncore, &evt, &wparam, &lparam, NULL, 0);
+				recvBuf = malloc(bufLen);
+				goto read_next;
+			}
+			
+			switch (evt)
+			{
+			case ASYNCCORE_EVT_NEW:
 				{
-					pAcceptorMgr->accept(wparam, lparam);
+					if (lparam > 0)
+					{
+						pAcceptorMgr->accept(wparam, lparam);
+					}
 				}
+				break;
+			case ASYNCCORE_EVT_LEAVE:
+				{
+					pEndptMgr->onLeave(wparam);
+				}
+				break;
+			case ASYNCCORE_EVT_DATA:
+				{
+					pEndptMgr->onRecv(wparam, recvBuf, hr);
+				}
+				break;
+			default:
+				break;
 			}
-			break;
-		case ASYNCCORE_EVT_LEAVE:
+	  
+			if (recvBuf != defRecvBuf)
 			{
-				pEndptMgr->onLeave(wparam);
+				free(recvBuf);
+				recvBuf = defRecvBuf;
+				bufLen = DEF_RECV_BUFSZ;				
 			}
-			break;
-		case ASYNCCORE_EVT_DATA:
-			{
-				pEndptMgr->onRecv(wparam, recvBuf, bufLen);
-			}
-			break;
-		default:
-			break;
-		}
-
+			
+	  read_next:
+			hr = asn_core_read(asncore, &evt, &wparam, &lparam, recvBuf, bufLen);			
+		}		
 		if (recvBuf != defRecvBuf) free(recvBuf);
 	}
 

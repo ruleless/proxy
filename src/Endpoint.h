@@ -21,13 +21,18 @@ enum EEndpointType
 	
 	EndpointType_Server,
 	EndpointType_Client,
+
+	EndpointType_Max,
 };
+
+class EndpointManager;
 
 class Endpoint
 {
-  public:	   
-    Endpoint()
+  public:
+    Endpoint(EndpointManager *pEndptMgr)
 			:mSockId(0)
+			,mpEndptMgr(pEndptMgr)
 	{
 		mId.asInt = 0;
 	}
@@ -40,16 +45,18 @@ class Endpoint
 	SockID getSockId() const;
 	void setSockId(SockID sockId);
 
-	virtual EEndpointType getType() const
+	static EEndpointType getType()
 	{
 		return EndpointType_Unknown;
 	}
 	
 	virtual void onRecv(void* data, long datalen) = 0;
 	virtual void onLeave() = 0;
-  protected:
+  protected:	
 	EndpointID mId;
 	SockID mSockId;
+	
+	EndpointManager *mpEndptMgr;
 };
 
 NAMESPACE_END // namespace proxy

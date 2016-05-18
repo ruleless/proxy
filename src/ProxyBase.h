@@ -42,6 +42,8 @@ using core::levelWarning;
 using core::levelError;
 using core::levelEmphasis;
 
+using core::ostrbuf;
+
 typedef long SockID;
 
 enum
@@ -58,5 +60,7 @@ enum EProxyCode
 	ProxyCode_CreateEndptFailed,
 	ProxyCode_AddEndptFailed,
 };
+
+extern int gProxyInstance;
 
 #endif // __PROXYBASE_H__

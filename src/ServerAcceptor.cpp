@@ -1,5 +1,5 @@
 #include "ServerAcceptor.h"
-#include "Server.h"
+#include "ProxyFactoryRegister.h"
 
 NAMESPACE_BEG(proxy)
 
@@ -8,13 +8,20 @@ ServerAcceptor::~ServerAcceptor()
 
 Endpoint* ServerAcceptor::createEndpt(SockID sockId, EndpointID id)
 {
-	Server *svr = new Server();
-	assert(svr && "new Server");
-	
-	svr->setSockId(sockId);
-	svr->setId(id);
+	ProxyFactory *factory = ProxyFactoryRegister::getRegister()->getProxyFactory(EndpointType_Server, gProxyInstance);
+	if (factory)
+	{
+		Endpoint *ep = factory->createProxy(mpEndptMgr);
+		ep->setSockId(sockId);
+		ep->setId(id);
+		return ep;
+	}
+	else
+	{
+		logErrorLn("got no related proxy for server! proxyins="<<gProxyInstance);
+	}
 
-	return svr;
+	return NULL;	
 }
 
 NAMESPACE_END // namespace proxy

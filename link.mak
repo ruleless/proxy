@@ -25,7 +25,7 @@ $(LIBPATH):
 
 # First Layer
 $(TARGET):$(OBJS)
-	$(CC) -o $@ $^ $(LDFLAGS)
+	$(CXX) -o $@ $^ $(LDFLAGS)
 ifdef EXEPATH
 	cp $@ $(EXEPATH)
 endif
