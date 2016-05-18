@@ -42,9 +42,21 @@ using core::levelWarning;
 using core::levelError;
 using core::levelEmphasis;
 
+typedef long SockID;
+
 enum
 {
 	MAX_ENDPOINT = 8192,
+};
+
+enum EProxyCode
+{
+	ProxyCode_Success = 0,
+
+	ProxyCode_Mismatch,
+	ProxyCode_NoMoreID,
+	ProxyCode_CreateEndptFailed,
+	ProxyCode_AddEndptFailed,
 };
 
 #endif // __PROXYBASE_H__

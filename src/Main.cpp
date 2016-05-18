@@ -1,4 +1,80 @@
 #include "ProxyBase.h"
+#include "EndptIDGenerator.h"
+#include "ClientAcceptor.h"
+#include "ServerAcceptor.h"
+#include "EndpointManager.h"
+
+using namespace proxy;
+
+//--------------------------------------------------------------------------
+// 接入管理
+class AcceptorMgr
+{
+  public:
+    AcceptorMgr(AsyncCore *asncore, EndpointManager *pEndptMgr)
+			:mpAsnCore(asncore)
+			,mpEndptMgr(pEndptMgr)
+			,mAcceptors()
+	{		
+	}	
+	
+    virtual ~AcceptorMgr()
+	{		
+	}
+
+	bool initialise()
+	{
+		ClientAcceptor *pClientAcceptor = new ClientAcceptor(mpAsnCore, mpEndptMgr, 20000);
+		if (!pClientAcceptor->initialise())
+		{
+			logErrorLn("initialise client accepor error!");
+			return false;
+		}
+
+		ServerAcceptor *pServerAcceptor = new ServerAcceptor(mpAsnCore, mpEndptMgr, 20001);
+		if (!pServerAcceptor->initialise())
+		{
+			pClientAcceptor->finalise();
+			logErrorLn("initialise server accepor error!");
+			return false;
+		}
+		
+		mAcceptors.push_back(pClientAcceptor);
+		mAcceptors.push_back(pServerAcceptor);
+		return true;
+	}
+
+	void finalise()
+	{
+		AcceptorList::iterator it = mAcceptors.begin();
+		for (; it != mAcceptors.begin(); ++it)
+		{
+			Acceptor *pAcceptor = *it;
+			pAcceptor->finalise();
+			delete pAcceptor;
+		}
+		mAcceptors.clear();
+	}
+
+	void accept(SockID newSock, SockID listenSock)
+	{
+		AcceptorList::iterator it = mAcceptors.begin();
+		for (; it != mAcceptors.begin(); ++it)
+		{
+			Acceptor *pAcceptor = *it;
+			EProxyCode retCode = pAcceptor->tryAccept(newSock, listenSock);
+			if (retCode != ProxyCode_Mismatch)
+				break;
+		}
+	}
+  private:
+	typedef std::list<Acceptor *> AcceptorList;
+
+	AsyncCore *mpAsnCore;
+	EndpointManager *mpEndptMgr;
+	AcceptorList mAcceptors;
+};
+//--------------------------------------------------------------------------
 
 int main(int argc, char *argv[])
 {
@@ -6,9 +82,21 @@ int main(int argc, char *argv[])
 	output2Console();
 	output2Html("proxy.html");
 
+	// initialise the net library
 	AsyncCore *asncore = asn_core_new();
 	assert(asncore != NULL && "new AsyncCore");
 
+	// initialise Endpoint Manager
+	new EndptIDGenerator(1);
+	EndptIDGenerator::getSingletonPtr()->initialise();
+	
+	EndpointManager *pEndptMgr = new EndpointManager();
+	assert(pEndptMgr && pEndptMgr->initialise() && "initialise EndpointManager");
+
+	// initialise acceptor
+	AcceptorMgr *pAcceptorMgr = new AcceptorMgr(asncore, pEndptMgr);
+	assert(pAcceptorMgr && pAcceptorMgr->initialise() && "initialise AcceptorMgr");
+	
 	static const int DEF_RECV_BUFSZ = 1024;
 	char defRecvBuf[DEF_RECV_BUFSZ] = {0};
 	void *recvBuf = NULL;
@@ -18,7 +106,7 @@ int main(int argc, char *argv[])
 	long wparam = 0, lparam = 0, hr = 0;
 	while (true)
 	{
-		asn_core_wait(asncore, 16);
+		asn_core_wait(asncore, -1);
 
 		recvBuf = defRecvBuf;
 		bufLen = DEF_RECV_BUFSZ;
@@ -44,10 +132,22 @@ int main(int argc, char *argv[])
 		switch (hr)
 		{
 		case ASYNCCORE_EVT_NEW:
+			{
+				if (lparam > 0)
+				{
+					pAcceptorMgr->accept(wparam, lparam);
+				}
+			}
 			break;
 		case ASYNCCORE_EVT_LEAVE:
+			{
+				pEndptMgr->onLeave(wparam);
+			}
 			break;
 		case ASYNCCORE_EVT_DATA:
+			{
+				pEndptMgr->onRecv(wparam, recvBuf, bufLen);
+			}
 			break;
 		default:
 			break;
@@ -55,8 +155,17 @@ int main(int argc, char *argv[])
 
 		if (recvBuf != defRecvBuf) free(recvBuf);
 	}
+
+	// uninitialise
+	pAcceptorMgr->finalise();
+	pEndptMgr->finalise();
+	EndptIDGenerator::getSingletonPtr()->finalise();
+
+	delete pAcceptorMgr;
+	delete pEndptMgr;
+	delete EndptIDGenerator::getSingletonPtr();
+	asn_core_delete(asncore);
 	
-	asn_core_delete(asncore);	
 	closeTrace();
 	
     return 0;
