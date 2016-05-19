@@ -20,8 +20,10 @@ class ProxyFactoryImpl : public ProxyFactory
 
 	virtual EEndpointType getType()
 	{
-		return ProxyT::getType();
+		return mFakeObj.getType();
 	}
+  private:
+	ProxyT mFakeObj;
 };
 
 NAMESPACE_END // namespace proxy

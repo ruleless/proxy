@@ -7,19 +7,19 @@
 
 NAMESPACE_BEG(proxy)
 
-template <int proxyIns, class ProxyT>
+template <int ProtocolType, class ProxyT>
 class AutoRegisterProxy
 {
   public:
     AutoRegisterProxy()
 			:mRegister(ProxyFactoryRegister::getRegister())
 	{
-		mRegister->registerFactory(mFactory.getType(), proxyIns, &mFactory);
+		mRegister->registerFactory(mFactory.getType(), ProtocolType, &mFactory);
 	}
 	
     virtual ~AutoRegisterProxy()
 	{
-		mRegister->unregisterFactory(mFactory.getType(), proxyIns, &mFactory);
+		mRegister->unregisterFactory(mFactory.getType(), ProtocolType, &mFactory);
 	}
   protected:
 	ProxyFactoryRegister *mRegister;
@@ -33,7 +33,7 @@ NAMESPACE_END // namespace proxy
 
 #define PROXY_IMPLEMENTION(ProxyT)
 	
-#define PROXY_FACTORY_REGISTRATION(proxyIns, ProxyT)				\
-	static proxy::AutoRegisterProxy<proxyIns, ProxyT> _autoRegisterProxy_##ProxyT
+#define PROXY_FACTORY_REGISTRATION(protoType, ProxyT)				\
+	static proxy::AutoRegisterProxy<protoType, ProxyT> _autoRegisterProxy_##ProxyT
 
 #endif // __AUTOREGISTERPROXY_H__

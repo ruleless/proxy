@@ -5,9 +5,10 @@ MAKE=make
 CFLAGS+=-g -Wall
 CXXFLAGS+=-g -Wall
 
-CILLDIR:=../../cill
+TOPDIR:=../..
+CILLDIR:=$(TOPDIR)/cill
 
-CXXFLAGS:=-I $(CILLDIR) -I $(CILLDIR)/kmem
+CXXFLAGS:=-I $(CILLDIR) -I $(CILLDIR)/kmem -I $(TOPDIR)/src
 LDFLAGS:=-L $(CILLDIR)/lib -lcill -lasyncnet -lkmem -lpthread -lrt -ldl
 
 SRCS=$(wildcard *.cpp)

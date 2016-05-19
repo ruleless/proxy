@@ -1,4 +1,5 @@
 #include "Acceptor.h"
+#include "NetWraper.h"
 #include "EndptIDGenerator.h"
 #include "EndpointManager.h"
 
@@ -10,7 +11,7 @@ Acceptor::~Acceptor()
 
 bool Acceptor::initialise()
 {
-	mSockId = asn_core_new_listen(mpAsnCore, "0.0.0.0", mListenPort, 0);
+	mSockId = gNetWraper->listen("0.0.0.0", mListenPort, 0);
 	if (mSockId < 0)
 	{
 		mSockId = 0;
@@ -24,7 +25,7 @@ void Acceptor::finalise()
 {
 	if (mSockId != 0)
 	{
-		asn_core_close(mpAsnCore, mSockId, 0);
+		gNetWraper->close(mSockId, 0);
 		mSockId = 0;	
 	}
 }

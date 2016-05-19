@@ -42,6 +42,10 @@ bool EndpointManager::addEndpt(SockID sockId, EndpointID id, Endpoint *ep)
 
 	mEndptArray[index] = ep;
 	mEndptList.insert(std::make_pair(sockId, ep));
+	if (ep->getType() == EndpointType_Server)
+	{
+		mServerList.insert(std::make_pair(sockId, ep));
+	}
 	return true;
 }
 
@@ -59,6 +63,11 @@ Endpoint* EndpointManager::getEndptBySockId(SockID sockId) const
 	if (it != mEndptList.end())
 		return it->second;
 	return NULL;
+}
+
+EndpointManager::EndptIterator EndpointManager::getSvrListIterator()
+{
+	return EndptIterator(mServerList.begin(), mServerList.end());
 }
 
 void EndpointManager::onRecv(SockID sockId, void *data, long datalen)
@@ -82,6 +91,12 @@ void EndpointManager::onLeave(SockID sockId)
 		Endpoint *ep = it->second;
 		if (ep)
 		{
+			if (ep->getType() == EndpointType_Server)
+			{
+				EndptList::iterator itSvr = mServerList.find(sockId);
+				if (itSvr != mServerList.end())
+					mServerList.erase(itSvr);
+			}
 			ep->onLeave();
 			delete ep;
 		}

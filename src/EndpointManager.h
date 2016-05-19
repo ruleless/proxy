@@ -9,6 +9,9 @@ NAMESPACE_BEG(proxy)
 class EndpointManager
 {
   public:
+	typedef std::map<SockID, Endpoint *> EndptList;
+	typedef MapIterator<EndptList> EndptIterator;
+	
     EndpointManager()
 			:mEndptList()
 	{
@@ -23,14 +26,14 @@ class EndpointManager
 	bool addEndpt(SockID sockId, EndpointID id, Endpoint *ep);
 	Endpoint* getEndptByIndex(EndpointID id) const;
 	Endpoint* getEndptBySockId(SockID sockId) const;
+	EndptIterator getSvrListIterator();
 
 	void onRecv(SockID sockId, void *data, long datalen);
 	void onLeave(SockID sockId);
-  private:
-	typedef std::map<SockID, Endpoint *> EndptList;
-	
+  private:	
 	Endpoint* mEndptArray[MAX_ENDPOINT];
 	EndptList mEndptList;
+	EndptList mServerList;
 };
 
 NAMESPACE_END // namespace proxy

@@ -15,10 +15,10 @@ class ProxyFactoryRegister
 	static ProxyFactoryRegister* getRegister();
 	static bool isValid();
 
-	void registerFactory(EEndpointType t, int proxyIns, ProxyFactory *factory);
-	void unregisterFactory(EEndpointType t, int proxyIns, ProxyFactory *factory);
+	void registerFactory(EEndpointType t, int protoType, ProxyFactory *factory);
+	void unregisterFactory(EEndpointType t, int protoType, ProxyFactory *factory);
 
-	ProxyFactory* getProxyFactory(EEndpointType t, int proxyIns);
+	ProxyFactory* getProxyFactory(EEndpointType t, int protoType);
   protected:
 	typedef std::map<int, ProxyFactory *> FactoryList;
 

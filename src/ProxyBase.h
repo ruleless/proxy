@@ -2,8 +2,6 @@
 #define __PROXYBASE_H__
 
 #include "core/CillCore.h"
-#include "asyncnet/AsyncNet.h"
-#include "asyncnet/system.h"
 
 using core::mchar;
 using core::wchar;
@@ -43,6 +41,12 @@ using core::levelError;
 using core::levelEmphasis;
 
 using core::ostrbuf;
+using core::MemoryStream;
+
+using core::VectorIterator;
+using core::ConstVectorIterator;
+using core::MapIterator;
+using core::ConstMapIterator;
 
 typedef long SockID;
 
@@ -61,6 +65,6 @@ enum EProxyCode
 	ProxyCode_AddEndptFailed,
 };
 
-extern int gProxyInstance;
+extern int gProxyProtocolType;
 
 #endif // __PROXYBASE_H__

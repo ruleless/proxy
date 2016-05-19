@@ -2,28 +2,9 @@
 #define __ENDPOINT_H__
 
 #include "ProxyBase.h"
+#include "Proxydef.h"
 
 NAMESPACE_BEG(proxy)
-
-union EndpointID
-{
-	struct
-	{
-		uint proxyId:8;
-		uint index:24;
-	} asStruct;
-	uint asInt;
-};
-
-enum EEndpointType
-{
-	EndpointType_Unknown,
-	
-	EndpointType_Server,
-	EndpointType_Client,
-
-	EndpointType_Max,
-};
 
 class EndpointManager;
 
@@ -45,7 +26,10 @@ class Endpoint
 	SockID getSockId() const;
 	void setSockId(SockID sockId);
 
-	static EEndpointType getType()
+	void send(void *data, long datalen);
+	void kickout(int code = 0);
+
+	virtual EEndpointType getType() const
 	{
 		return EndpointType_Unknown;
 	}

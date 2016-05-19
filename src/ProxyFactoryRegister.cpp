@@ -25,28 +25,28 @@ bool ProxyFactoryRegister::isValid()
 	return mbValid;
 }
 
-void ProxyFactoryRegister::registerFactory(EEndpointType t, int proxyIns, ProxyFactory *factory)
+void ProxyFactoryRegister::registerFactory(EEndpointType t, int protoType, ProxyFactory *factory)
 {
 	assert(t >= 0 && t < EndpointType_Max && factory);
 
-	assert(mFactories[t].find(proxyIns) == mFactories[t].end() && "ProxyFactory already exist");
-	mFactories[t].insert(std::make_pair(proxyIns, factory));
+	assert(mFactories[t].find(protoType) == mFactories[t].end() && "ProxyFactory already exist");
+	mFactories[t].insert(std::make_pair(protoType, factory));
 }
 
-void ProxyFactoryRegister::unregisterFactory(EEndpointType t, int proxyIns, ProxyFactory *factory)
+void ProxyFactoryRegister::unregisterFactory(EEndpointType t, int protoType, ProxyFactory *factory)
 {
 	assert(t >= 0 && t < EndpointType_Max && factory);
 
-	FactoryList::iterator it = mFactories[t].find(proxyIns);
+	FactoryList::iterator it = mFactories[t].find(protoType);
 	if (it != mFactories[t].end())
 	{
 		mFactories[t].erase(it);
 	}	
 }
 
-ProxyFactory* ProxyFactoryRegister::getProxyFactory(EEndpointType t, int proxyIns)
+ProxyFactory* ProxyFactoryRegister::getProxyFactory(EEndpointType t, int protoType)
 {
-	FactoryList::iterator it = mFactories[t].find(proxyIns);
+	FactoryList::iterator it = mFactories[t].find(protoType);
 	if (it != mFactories[t].end())
 	{
 		return it->second;

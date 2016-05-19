@@ -11,13 +11,11 @@ class EndpointManager;
 class Acceptor
 {
   public:
-    Acceptor(AsyncCore *pAsnCore, EndpointManager *pEndptMgr, int listenPort)
-			:mpAsnCore(pAsnCore)
-			,mpEndptMgr(pEndptMgr)
+    Acceptor(EndpointManager *pEndptMgr, int listenPort)
+			:mpEndptMgr(pEndptMgr)
 			,mListenPort(listenPort)
 			,mSockId(0)
 	{
-		assert(mpAsnCore && "mpAsnCore != NULL");
 		assert(mpEndptMgr && "mpEndptMgr != NULL");
 	}
 	
@@ -28,9 +26,8 @@ class Acceptor
 
 	EProxyCode tryAccept(SockID newSock, SockID listenSock, Endpoint *retEp = NULL);
 
-	virtual Endpoint* createEndpt(SockID sockId, EndpointID id) = NULL;
+	virtual Endpoint* createEndpt(SockID sockId, EndpointID id) = 0;
   protected:
-	AsyncCore *mpAsnCore;
 	EndpointManager *mpEndptMgr;
 	int mListenPort;
 	SockID mSockId;

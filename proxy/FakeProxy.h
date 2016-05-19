@@ -9,13 +9,13 @@ NAMESPACE_BEG(proxy)
 class FakeClientProxy : public Endpoint
 {
   public:
-    FakeClientProxy(EndpointManager *pEndptMgr)
+    FakeClientProxy(EndpointManager *pEndptMgr=NULL)
 			:Endpoint(pEndptMgr)
 	{}
 	
     virtual ~FakeClientProxy();
 
-	static EEndpointType getType()
+	virtual EEndpointType getType() const
 	{
 		return EndpointType_Client;
 	}
@@ -27,13 +27,13 @@ class FakeClientProxy : public Endpoint
 class FakeServerProxy : public Endpoint
 {
   public:
-    FakeServerProxy(EndpointManager *pEndptMgr)
+    FakeServerProxy(EndpointManager *pEndptMgr=NULL)
 			:Endpoint(pEndptMgr)
 	{}
 	
     virtual ~FakeServerProxy();
 
-	static EEndpointType getType()
+	virtual EEndpointType getType() const
 	{
 		return EndpointType_Server;
 	}

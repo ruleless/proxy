@@ -8,7 +8,7 @@ ClientAcceptor::~ClientAcceptor()
 
 Endpoint* ClientAcceptor::createEndpt(SockID sockId, EndpointID id)
 {	
-	ProxyFactory *factory = ProxyFactoryRegister::getRegister()->getProxyFactory(EndpointType_Client, gProxyInstance);
+	ProxyFactory *factory = ProxyFactoryRegister::getRegister()->getProxyFactory(EndpointType_Client, gProxyProtocolType);
 	if (factory)
 	{
 		Endpoint *ep = factory->createProxy(mpEndptMgr);
@@ -18,7 +18,7 @@ Endpoint* ClientAcceptor::createEndpt(SockID sockId, EndpointID id)
 	}
 	else
 	{
-		logErrorLn("got no related proxy for client! proxyins="<<gProxyInstance);
+		logErrorLn("got no related proxy for client! proxy-protocol-type="<<gProxyProtocolType);
 	}
 
 	return NULL;

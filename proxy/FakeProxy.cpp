@@ -14,12 +14,12 @@ void FakeClientProxy::onRecv(void* data, long datalen)
 	ostrbuf osb;
 	osb.push_back(data, datalen);
 	osb<<"\0";
-	logInfoLn("recv from client!( sockid="<<mSockId<<",id="<<mId.asInt<<") datalen:"<<datalen<<" buf:"<<osb.c_str());
+	logInfoLn("recv from client! (sockid="<<mSockId<<",id="<<mId.asInt<<") datalen:"<<datalen<<" buf:"<<osb.c_str());
 }
 
 void FakeClientProxy::onLeave()
 {
-	logWarningLn("client leave!( sockid="<<mSockId<<",id="<<mId.asInt<<")");
+	logWarningLn("client leave! (sockid="<<mSockId<<",id="<<mId.asInt<<")");
 }
 //--------------------------------------------------------------------------
 

@@ -1,4 +1,5 @@
 #include "ProxyBase.h"
+#include "NetWraper.h"
 #include "EndptIDGenerator.h"
 #include "ClientAcceptor.h"
 #include "ServerAcceptor.h"
@@ -6,16 +7,15 @@
 
 using namespace proxy;
 
-int gProxyInstance = 0;
+int gProxyProtocolType = 1;
 
 //--------------------------------------------------------------------------
 // 接入管理
 class AcceptorMgr
 {
   public:
-    AcceptorMgr(AsyncCore *asncore, EndpointManager *pEndptMgr)
-			:mpAsnCore(asncore)
-			,mpEndptMgr(pEndptMgr)
+    AcceptorMgr(EndpointManager *pEndptMgr)
+			:mpEndptMgr(pEndptMgr)
 			,mAcceptors()
 	{		
 	}	
@@ -26,14 +26,14 @@ class AcceptorMgr
 
 	bool initialise()
 	{
-		ClientAcceptor *pClientAcceptor = new ClientAcceptor(mpAsnCore, mpEndptMgr, 20000);
+		ClientAcceptor *pClientAcceptor = new ClientAcceptor(mpEndptMgr, 20000);
 		if (!pClientAcceptor->initialise())
 		{
 			logErrorLn("initialise client accepor error!");
 			return false;
 		}
 
-		ServerAcceptor *pServerAcceptor = new ServerAcceptor(mpAsnCore, mpEndptMgr, 20001);
+		ServerAcceptor *pServerAcceptor = new ServerAcceptor(mpEndptMgr, 20001);
 		if (!pServerAcceptor->initialise())
 		{
 			pClientAcceptor->finalise();
@@ -72,7 +72,6 @@ class AcceptorMgr
   private:
 	typedef std::list<Acceptor *> AcceptorList;
 
-	AsyncCore *mpAsnCore;
 	EndpointManager *mpEndptMgr;
 	AcceptorList mAcceptors;
 };
@@ -85,8 +84,7 @@ int main(int argc, char *argv[])
 	output2Html("proxy.html");
 
 	// initialise the net library
-	AsyncCore *asncore = asn_core_new();
-	assert(asncore != NULL && "new AsyncCore");
+	gNetWraper->initialise();
 
 	// initialise Endpoint Manager
 	new EndptIDGenerator(1);
@@ -96,7 +94,7 @@ int main(int argc, char *argv[])
 	assert(pEndptMgr && pEndptMgr->initialise() && "initialise EndpointManager");
 
 	// initialise acceptor
-	AcceptorMgr *pAcceptorMgr = new AcceptorMgr(asncore, pEndptMgr);
+	AcceptorMgr *pAcceptorMgr = new AcceptorMgr(pEndptMgr);
 	assert(pAcceptorMgr && pAcceptorMgr->initialise() && "initialise AcceptorMgr");
 	
 	static const int DEF_RECV_BUFSZ = 1024;
@@ -108,17 +106,17 @@ int main(int argc, char *argv[])
 	long wparam = 0, lparam = 0, hr = 0;
 	while (true)
 	{
-		asn_core_wait(asncore, -1);
+		gNetWraper->wait(-1);
 
 		recvBuf = defRecvBuf;
 		bufLen = DEF_RECV_BUFSZ;
-		hr = asn_core_read(asncore, &evt, &wparam, &lparam, recvBuf, bufLen);
+		hr = gNetWraper->read(&evt, &wparam, &lparam, recvBuf, bufLen);
 		while (hr != -1)
 		{
 			if (-2 == hr) // short of buf
 			{
 				if (recvBuf != defRecvBuf) free(recvBuf);
-				bufLen = asn_core_read(asncore, &evt, &wparam, &lparam, NULL, 0);
+				bufLen = gNetWraper->read(&evt, &wparam, &lparam, NULL, 0);
 				recvBuf = malloc(bufLen);
 				goto read_next;
 			}
@@ -155,7 +153,7 @@ int main(int argc, char *argv[])
 			}
 			
 	  read_next:
-			hr = asn_core_read(asncore, &evt, &wparam, &lparam, recvBuf, bufLen);			
+			hr = gNetWraper->read(&evt, &wparam, &lparam, recvBuf, bufLen);
 		}		
 		if (recvBuf != defRecvBuf) free(recvBuf);
 	}
@@ -168,7 +166,7 @@ int main(int argc, char *argv[])
 	delete pAcceptorMgr;
 	delete pEndptMgr;
 	delete EndptIDGenerator::getSingletonPtr();
-	asn_core_delete(asncore);
+	gNetWraper->finalise();
 	
 	closeTrace();
 	

@@ -9,8 +9,8 @@ NAMESPACE_BEG(proxy)
 class ClientAcceptor : public Acceptor
 {
   public:
-    ClientAcceptor(AsyncCore *pAsnCore, EndpointManager *pEndptMgr, int listenPort)
-			:Acceptor(pAsnCore, pEndptMgr, listenPort)
+    ClientAcceptor(EndpointManager *pEndptMgr, int listenPort)
+			:Acceptor(pEndptMgr, listenPort)
 	{}
 	
     virtual ~ClientAcceptor();
