@@ -24,16 +24,15 @@ class EndpointManager
 	void finalise();
 
 	bool addEndpt(SockID sockId, EndpointID id, Endpoint *ep);
-	Endpoint* getEndptByIndex(EndpointID id) const;
+	Endpoint* getEndptById(EndpointID id) const;
 	Endpoint* getEndptBySockId(SockID sockId) const;
-	EndptIterator getSvrListIterator();
+	EndptIterator getIterator(EEndpointType tpy);
 
 	void onRecv(SockID sockId, void *data, long datalen);
 	void onLeave(SockID sockId);
   private:	
 	Endpoint* mEndptArray[MAX_ENDPOINT];
-	EndptList mEndptList;
-	EndptList mServerList;
+	EndptList mEndptList[EndpointType_Max];
 };
 
 NAMESPACE_END // namespace proxy

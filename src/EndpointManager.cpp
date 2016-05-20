@@ -21,7 +21,10 @@ void EndpointManager::finalise()
 			mEndptArray[i] = NULL;
 		}
 	}
-	mEndptList.clear();
+	for (int t = 1; t < EndpointType_Max; ++t)
+	{
+		mEndptList[t].clear();
+	}	
 }
 
 bool EndpointManager::addEndpt(SockID sockId, EndpointID id, Endpoint *ep)
@@ -31,8 +34,11 @@ bool EndpointManager::addEndpt(SockID sockId, EndpointID id, Endpoint *ep)
 	int index = id.asStruct.index;
 	if (index < 0 || index >= MAX_ENDPOINT)
 		return false;
-	if (mEndptList.find(sockId) != mEndptList.end())
-		return false;
+	for (int t = 1; t < EndpointType_Max; ++t)
+	{
+		if (mEndptList[t].find(sockId) != mEndptList[t].end())
+			return false;
+	}	
 
 	if (mEndptArray[index])
 	{
@@ -41,15 +47,11 @@ bool EndpointManager::addEndpt(SockID sockId, EndpointID id, Endpoint *ep)
 	}
 
 	mEndptArray[index] = ep;
-	mEndptList.insert(std::make_pair(sockId, ep));
-	if (ep->getType() == EndpointType_Server)
-	{
-		mServerList.insert(std::make_pair(sockId, ep));
-	}
+	mEndptList[ep->getType()].insert(std::make_pair(sockId, ep));
 	return true;
 }
 
-Endpoint* EndpointManager::getEndptByIndex(EndpointID id) const
+Endpoint* EndpointManager::getEndptById(EndpointID id) const
 {
 	int index = id.asStruct.index;
 	if (index >= 0 && index < MAX_ENDPOINT)
@@ -59,15 +61,18 @@ Endpoint* EndpointManager::getEndptByIndex(EndpointID id) const
 
 Endpoint* EndpointManager::getEndptBySockId(SockID sockId) const
 {
-	EndptList::const_iterator it = mEndptList.find(sockId);
-	if (it != mEndptList.end())
-		return it->second;
+	for (int t = 1; t < EndpointType_Max; ++t)
+	{
+		EndptList::const_iterator it = mEndptList[t].find(sockId);
+		if (it != mEndptList[t].end())
+			return it->second;
+	}
 	return NULL;
 }
 
-EndpointManager::EndptIterator EndpointManager::getSvrListIterator()
+EndpointManager::EndptIterator EndpointManager::getIterator(EEndpointType tpy)
 {
-	return EndptIterator(mServerList.begin(), mServerList.end());
+	return EndptIterator(mEndptList[tpy].begin(), mEndptList[tpy].end());
 }
 
 void EndpointManager::onRecv(SockID sockId, void *data, long datalen)
@@ -85,24 +90,26 @@ void EndpointManager::onRecv(SockID sockId, void *data, long datalen)
 
 void EndpointManager::onLeave(SockID sockId)
 {
-	EndptList::iterator it = mEndptList.find(sockId);
-	if (it != mEndptList.end())
+	bool findNoEp = true;
+	for (int t = 1; t < EndpointType_Max; ++t)
 	{
-		Endpoint *ep = it->second;
-		if (ep)
+		EndptList::iterator it = mEndptList[t].find(sockId);
+		if (it != mEndptList[t].end())
 		{
-			if (ep->getType() == EndpointType_Server)
-			{
-				EndptList::iterator itSvr = mServerList.find(sockId);
-				if (itSvr != mServerList.end())
-					mServerList.erase(itSvr);
+			Endpoint *ep = it->second;
+			if (ep)
+			{				
+				mEndptArray[ep->getId().asStruct.index] = NULL;
+				ep->onLeave();
+				delete ep;
 			}
-			ep->onLeave();
-			delete ep;
+			mEndptList[t].erase(it);
+			findNoEp = false;
+			break;
 		}
-		mEndptList.erase(it);
 	}
-	else
+   
+	if (findNoEp)
 	{
 		logErrorLn("EndpointManager::onLeave()  find no endpoint! sockid="<<sockId);
 	}

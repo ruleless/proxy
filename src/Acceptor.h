@@ -11,10 +11,11 @@ class EndpointManager;
 class Acceptor
 {
   public:
-    Acceptor(EndpointManager *pEndptMgr, int listenPort)
+    Acceptor(EndpointManager *pEndptMgr, int listenPort, EEndpointType acceptType = EndpointType_Client)
 			:mpEndptMgr(pEndptMgr)
 			,mListenPort(listenPort)
 			,mSockId(0)
+			,mAcceptType(acceptType)
 	{
 		assert(mpEndptMgr && "mpEndptMgr != NULL");
 	}
@@ -26,11 +27,12 @@ class Acceptor
 
 	EProxyCode tryAccept(SockID newSock, SockID listenSock, Endpoint *retEp = NULL);
 
-	virtual Endpoint* createEndpt(SockID sockId, EndpointID id) = 0;
+	Endpoint* createEndpt(SockID sockId, EndpointID id);
   protected:
 	EndpointManager *mpEndptMgr;
 	int mListenPort;
 	SockID mSockId;
+	EEndpointType mAcceptType;
 };
 
 NAMESPACE_END // namespace proxy

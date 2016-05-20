@@ -1,5 +1,6 @@
 #include "Acceptor.h"
 #include "NetWraper.h"
+#include "ProxyFactoryRegister.h"
 #include "EndptIDGenerator.h"
 #include "EndpointManager.h"
 
@@ -55,8 +56,26 @@ EProxyCode Acceptor::tryAccept(SockID newSock, SockID listenSock, Endpoint *retE
 		EndptIDGenerator::getSingletonPtr()->restorId(id);
 		return ProxyCode_AddEndptFailed;
 	}
-
+	
 	return ProxyCode_Success;
+}
+
+Endpoint* Acceptor::createEndpt(SockID sockId, EndpointID id)
+{
+	ProxyFactory *factory = ProxyFactoryRegister::getRegister()->getProxyFactory(mAcceptType, gProxyProtocolType);
+	if (factory)
+	{
+		Endpoint *ep = factory->createProxy(mpEndptMgr);
+		ep->setSockId(sockId);
+		ep->setId(id);
+		return ep;
+	}
+	else
+	{
+		logErrorLn("got no related proxy! accept-type="<<mAcceptType<<"  protocol-type="<<gProxyProtocolType);
+	}
+
+	return NULL;
 }
 
 NAMESPACE_END // namespace proxy

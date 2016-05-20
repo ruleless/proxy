@@ -17,7 +17,7 @@ void SimpleClientProxy::onRecv(void* data, long datalen)
 	stream->append((uint8 *)data, datalen);
 
 	bool hasServer = false;
-	EndpointManager::EndptIterator it = mpEndptMgr->getSvrListIterator();
+	EndpointManager::EndptIterator it = mpEndptMgr->getIterator(EndpointType_Server);
 	for (; it.hasMoreElements(); it.moveNext())
 	{
 		Endpoint *ep = it.peekNextValue();
@@ -54,7 +54,7 @@ void SimpleServerProxy::onRecv(void* data, long datalen)
 
 		EndpointID cliid;
 		(*stream)>>cliid.asInt;
-		Endpoint *ep = mpEndptMgr->getEndptByIndex(cliid);
+		Endpoint *ep = mpEndptMgr->getEndptById(cliid);
 		if (ep)
 		{
 			ep->send((char *)data+stream->rpos(), datalen-stream->rpos());

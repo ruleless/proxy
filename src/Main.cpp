@@ -1,8 +1,7 @@
 #include "ProxyBase.h"
 #include "NetWraper.h"
+#include "Acceptor.h"
 #include "EndptIDGenerator.h"
-#include "ClientAcceptor.h"
-#include "ServerAcceptor.h"
 #include "EndpointManager.h"
 
 using namespace proxy;
@@ -26,14 +25,14 @@ class AcceptorMgr
 
 	bool initialise()
 	{
-		ClientAcceptor *pClientAcceptor = new ClientAcceptor(mpEndptMgr, 20000);
+		Acceptor *pClientAcceptor = new Acceptor(mpEndptMgr, 20000, EndpointType_Client);
 		if (!pClientAcceptor->initialise())
 		{
 			logErrorLn("initialise client accepor error!");
 			return false;
 		}
 
-		ServerAcceptor *pServerAcceptor = new ServerAcceptor(mpEndptMgr, 20001);
+		Acceptor *pServerAcceptor = new Acceptor(mpEndptMgr, 20001, EndpointType_Server);
 		if (!pServerAcceptor->initialise())
 		{
 			pClientAcceptor->finalise();
